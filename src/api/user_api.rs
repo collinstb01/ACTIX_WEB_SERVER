@@ -80,3 +80,13 @@ pub async fn delete_user(db: Data<MongoRepo>, id: Path<String>) -> HttpResponse 
         Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
     }
 }
+
+#[get("/users")]
+pub async fn get_users(db: Data<MongoRepo>) -> HttpResponse {
+    let data = db.get_users().await;
+
+    match data {
+        Ok(data) => HttpResponse::Ok().json(data),
+        Err(err) => HttpResponse::NotFound().body(err.to_string()),
+    }
+}

@@ -1,13 +1,14 @@
-use std::env;
+use std::{env, str::FromStr};
 extern crate dotenv;
 use actix_web::{dev::Path, HttpResponse};
 use dotenv::dotenv;
+use futures::TryStreamExt;
 
 use crate::models::user_model::User;
 use mongodb::{
     bson::{doc, extjson::de::Error, oid::ObjectId},
     results::{DeleteResult, InsertOneResult, UpdateResult},
-    Client, Collection,
+    Client, Collection, Cursor,
 };
 
 pub struct MongoRepo {
@@ -43,7 +44,7 @@ impl MongoRepo {
     }
 
     pub async fn get_user(&self, id: &String) -> Result<User, Error> {
-        let id = ObjectId::parse_str(id).expect("Error passing string");
+        let id = mongodb::bson::oid::ObjectId::from_str(&id).expect("Error passing string");
         let filter = doc! {"_id": id};
 
         let user_data = self
@@ -56,7 +57,8 @@ impl MongoRepo {
     }
 
     pub async fn update_user(&self, id: String, new_user: User) -> Result<UpdateResult, Error> {
-        let obj_id = ObjectId::parse_str(id).expect("Unable to convert string to object id");
+        let obj_id = mongodb::bson::oid::ObjectId::from_str(&id)
+            .expect("Unable to convert string to object id");
         let filter = doc! {"_id": obj_id};
 
         let new_doc = doc! {
@@ -78,7 +80,7 @@ impl MongoRepo {
     }
 
     pub async fn delete_user(&self, id: String) -> Result<DeleteResult, Error> {
-        let id = ObjectId::parse_str(id).expect("Unable to pass string");
+        let id = mongodb::bson::oid::ObjectId::from_str(&id).expect("Unable to pass string");
         let filter = doc! {"_id": id};
 
         let data = self
@@ -88,5 +90,25 @@ impl MongoRepo {
             .expect("Unable to delete document");
 
         Ok(data)
+    }
+
+    pub async fn get_users(&self) -> Result<Vec<User>, Error> {
+        let mut cursors = self
+            .col
+            .find(None, None)
+            .await
+            .expect("Unable to get all users");
+
+        let mut users = Vec::new();
+
+        while let Some(user) = cursors
+            .try_next()
+            .await
+            .ok()
+            .expect("Error mapping through cursor")
+        {
+            users.push(user)
+        }
+        Ok(users)
     }
 }
