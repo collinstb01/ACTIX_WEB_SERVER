@@ -55,4 +55,4 @@ Contributions are welcome! If you find any issues or want to add new features, p
 
 ---
 
-Thank you for checking out **Your Project Name**! If you have any questions or need further assistance, please don't hesitate to reach out. Happy coding!
+Thank you for checking out **ACTIX_WEB_SERVER**! If you have any questions or need further assistance, please don't hesitate to reach out. Happy coding!
