@@ -32,6 +32,8 @@ impl MongoRepo {
         let new_doc = User {
             id: None,
             name: new_user.name,
+            email: new_user.email,
+            password: new_user.password,
             location: new_user.location,
             title: new_user.title,
         };

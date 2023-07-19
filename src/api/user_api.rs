@@ -5,15 +5,42 @@ use actix_web::{
     HttpResponse,
 };
 use mongodb::bson::oid::ObjectId;
+use regex::Regex;
 
 #[post("/user")]
 pub async fn create_user(db: Data<MongoRepo>, new_user: Json<User>) -> HttpResponse {
+    // check the validity of the email
+    let pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
+
+    if Regex::new(pattern).unwrap().is_match(&new_user.email) {
+        return HttpResponse::InternalServerError().body("Not a valid email address");
+    }
+
+    // cehck the name length
+    let user_name_len: Vec<&str> = new_user.name.split(" ").collect();
+
+    if new_user.name.len() < 3 && user_name_len.len() < 2 {
+        return HttpResponse::InternalServerError().body("Not a Name with two characters");
+    }
+
+    // check the password strenght
+    let pattern2 = r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$";
+
+    if Regex::new(pattern2).unwrap().is_match(&new_user.password) {
+        return HttpResponse::InternalServerError().body("Please enter a valid password, with Minimum eight characters, at least one letter and one number:");
+    }
+
+    // encrypt the password
+
     let data = User {
         id: None,
         name: new_user.name.to_owned(),
+        email: new_user.email.to_owned(),
+        password: new_user.password.to_owned(),
         location: new_user.location.to_owned(),
         title: new_user.title.to_owned(),
     };
+
     let user_detail = db.create_user(data).await;
     match user_detail {
         Ok(user) => HttpResponse::Ok().json(user),
@@ -49,6 +76,8 @@ pub async fn update_user(
     let new_user = User {
         id: Some(ObjectId::parse_str(&id).expect("Unable to parse string")),
         name: user_data.name.to_owned(),
+        email: user_data.email.to_owned(),
+        password: user_data.password.to_owned(),
         location: user_data.location.to_owned(),
         title: user_data.title.to_owned(),
     };

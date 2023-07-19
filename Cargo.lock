@@ -1711,6 +1711,7 @@ dependencies = [
  "dotenv",
  "futures",
  "mongodb",
+ "regex",
  "serde",
 ]
 
