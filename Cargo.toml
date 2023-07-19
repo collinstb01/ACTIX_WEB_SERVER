@@ -11,6 +11,9 @@ serde = "1.0.136"
 dotenv = "0.15.0"
 futures = "0.3"
 regex = "1.9.1"
+jwt = "0.16.0"
+sha2 = "0.10.7"
+hmac = "0.12.1"
 
 [dependencies.mongodb]
 version = "2.2.0"

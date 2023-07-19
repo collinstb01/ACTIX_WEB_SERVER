@@ -4,8 +4,34 @@ use actix_web::{
     web::{Data, Json, Path},
     HttpResponse,
 };
+use hmac::{Hmac, Mac};
+use jwt::{SignWithKey, VerifyWithKey};
 use mongodb::bson::oid::ObjectId;
 use regex::Regex;
+use sha2::Sha256;
+use std::collections::BTreeMap;
+
+fn get_secret_key() -> Hmac<Sha256> {
+    let key: Hmac<Sha256> = Hmac::new_from_slice(b"keysec").unwrap();
+    key
+}
+
+fn create_token(user_id: &String) -> String {
+    let key = get_secret_key();
+    let mut claims = BTreeMap::new();
+    claims.insert("user_id", user_id);
+    let token_str = claims.sign_with_key(&key).unwrap();
+
+    token_str
+}
+
+fn verify_token(token_str: &String, user_id: &String) {
+    let key = get_secret_key();
+    // let token_str = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzb21lb25lIn0.5wwE1sBrs-vftww_BGIuTVDeHtc1Jsjo-fiHhDwR8m0";
+    let claims: BTreeMap<String, String> = token_str.verify_with_key(&key).unwrap();
+
+    assert_eq!(&claims["user_id"], user_id);
+}
 
 #[post("/user")]
 pub async fn create_user(db: Data<MongoRepo>, new_user: Json<User>) -> HttpResponse {
@@ -42,6 +68,8 @@ pub async fn create_user(db: Data<MongoRepo>, new_user: Json<User>) -> HttpRespo
     };
 
     let user_detail = db.create_user(data).await;
+    // let token_str = create_token(user_detail);
+
     match user_detail {
         Ok(user) => HttpResponse::Ok().json(user),
         Err(err) => HttpResponse::InternalServerError().body(err.to_string()),

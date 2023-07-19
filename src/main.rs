@@ -1,10 +1,12 @@
 mod api;
+mod middleware;
 mod models;
 mod repository;
 
 //modify imports below
-use actix_web::{web::Data, App, HttpServer};
+use actix_web::{middleware::Logger, web::Data, App, HttpServer};
 use api::user_api::{create_user, delete_user, get_user, get_users, update_user};
+// use middleware::user_middleware::middleware_handler;
 use repository::mongodb_repo::MongoRepo;
 
 #[actix_web::main]
@@ -14,6 +16,10 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(db_data.clone())
+            // // Register the custom middleware before other routes
+            // .wrap(middleware_handler)
+            // // Optional: Use actix-web Logger middleware to log requests
+            // .wrap(Logger::default())
             .service(create_user)
             .service(get_user)
             .service(update_user)

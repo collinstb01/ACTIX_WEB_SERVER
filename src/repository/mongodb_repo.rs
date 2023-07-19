@@ -6,9 +6,9 @@ use futures::TryStreamExt;
 
 use crate::models::user_model::User;
 use mongodb::{
-    bson::{doc, extjson::de::Error, oid::ObjectId},
+    bson::{doc, extjson::de::Error},
     results::{DeleteResult, InsertOneResult, UpdateResult},
-    Client, Collection, Cursor,
+    Client, Collection,
 };
 
 pub struct MongoRepo {
