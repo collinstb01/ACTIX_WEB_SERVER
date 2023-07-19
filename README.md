@@ -1,4 +1,4 @@
-# ACTIX_WEB_SERVE
+# ACTIX_WEB_SERVER
 
 ![Rust](https://img.shields.io/badge/Rust-1.55-orange)
 ![Actix-Web](https://img.shields.io/badge/Actix--Web-4.0.0-blue)
