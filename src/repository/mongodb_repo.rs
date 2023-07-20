@@ -27,6 +27,7 @@ impl MongoRepo {
         MongoRepo { col }
     }
 
+    // working
     pub async fn create_user(&self, new_user: User) -> Result<InsertOneResult, Error> {
         let new_doc = User {
             id: None,
@@ -44,6 +45,7 @@ impl MongoRepo {
         Ok(user)
     }
 
+    // working
     pub async fn get_user(&self, id: &String) -> Result<User, Error> {
         let id = mongodb::bson::oid::ObjectId::parse_str(&id).expect("Error passing string");
         let filter = doc! {"_id": id};
@@ -57,6 +59,7 @@ impl MongoRepo {
         Ok(user_data.unwrap())
     }
 
+    // working
     pub async fn update_user(&self, id: String, new_user: User) -> Result<UpdateResult, Error> {
         let obj_id = mongodb::bson::oid::ObjectId::from_str(&id)
             .expect("Unable to convert string to object id");
@@ -80,6 +83,7 @@ impl MongoRepo {
         Ok(data)
     }
 
+    // working
     pub async fn delete_user(&self, id: String) -> Result<DeleteResult, Error> {
         let id = mongodb::bson::oid::ObjectId::from_str(&id).expect("Unable to pass string");
         let filter = doc! {"_id": id};
@@ -93,6 +97,7 @@ impl MongoRepo {
         Ok(data)
     }
 
+    // working
     pub async fn get_users(&self) -> Result<Vec<User>, Error> {
         let mut cursors = self
             .col
@@ -105,7 +110,6 @@ impl MongoRepo {
         while let Some(user) = cursors
             .try_next()
             .await
-            .ok()
             .expect("Error mapping through cursor")
         {
             users.push(user)
