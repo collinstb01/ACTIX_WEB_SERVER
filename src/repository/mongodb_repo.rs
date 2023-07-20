@@ -1,6 +1,5 @@
 use std::{env, str::FromStr};
 extern crate dotenv;
-use actix_web::{dev::Path, HttpResponse};
 use dotenv::dotenv;
 use futures::TryStreamExt;
 
@@ -46,7 +45,7 @@ impl MongoRepo {
     }
 
     pub async fn get_user(&self, id: &String) -> Result<User, Error> {
-        let id = mongodb::bson::oid::ObjectId::from_str(&id).expect("Error passing string");
+        let id = mongodb::bson::oid::ObjectId::parse_str(&id).expect("Error passing string");
         let filter = doc! {"_id": id};
 
         let user_data = self

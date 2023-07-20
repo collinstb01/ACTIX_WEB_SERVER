@@ -4,7 +4,7 @@ mod models;
 mod repository;
 
 //modify imports below
-use actix_web::{middleware::Logger, web::Data, App, HttpServer};
+use actix_web::{web::Data, App, HttpServer};
 use api::user_api::{create_user, delete_user, get_user, get_users, update_user};
 // use middleware::user_middleware::middleware_handler;
 use repository::mongodb_repo::MongoRepo;
