@@ -3,7 +3,7 @@ extern crate dotenv;
 use dotenv::dotenv;
 use futures::TryStreamExt;
 
-use crate::models::user_model::User;
+use crate::models::{books_model::Book, user_model::User};
 use mongodb::{
     bson::{doc, extjson::de::Error},
     results::{DeleteResult, InsertOneResult, UpdateResult},
@@ -12,6 +12,7 @@ use mongodb::{
 
 pub struct MongoRepo {
     col: Collection<User>,
+    bookCol: Collection<Book>,
 }
 
 impl MongoRepo {
@@ -24,7 +25,9 @@ impl MongoRepo {
         let client = Client::with_uri_str(uri).await.unwrap();
         let db = client.database("rustDB");
         let col: Collection<User> = db.collection("User");
-        MongoRepo { col }
+        let bookCol: Collection<Book> = db.collection("Book");
+
+        MongoRepo { col, bookCol }
     }
 
     // working
