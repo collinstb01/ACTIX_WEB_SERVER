@@ -10,4 +10,5 @@ pub struct User {
     pub password: String,
     pub location: String,
     pub title: String,
+    pub user_id: Option<String>,
 }

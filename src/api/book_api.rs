@@ -22,11 +22,21 @@ pub async fn create_book(db: Data<MongoRepo>, book: Json<Book>) -> HttpResponse 
     }
 }
 
-#[get["/books"]]
-pub async fn get_books(db: Data<MongoRepo>, names: String) -> HttpResponse {
+#[get["/book"]]
+pub async fn get_book(db: Data<MongoRepo>, names: String) -> HttpResponse {
     // let data = db.get_books.
 
-    let data = db.get_books(names).await;
+    let data = db.get_book(names).await;
+
+    match data {
+        Ok(data) => HttpResponse::Ok().json(data),
+        Err(err) => HttpResponse::InternalServerError().json(err.to_string()),
+    }
+}
+
+#[get("/books")]
+pub async fn get_books(db: Data<MongoRepo>) -> HttpResponse {
+    let data = db.get_books().await;
 
     match data {
         Ok(data) => HttpResponse::Ok().json(data),

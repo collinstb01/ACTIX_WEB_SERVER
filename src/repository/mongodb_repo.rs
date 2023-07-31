@@ -5,7 +5,7 @@ use futures::{io::Cursor, TryStreamExt};
 
 use crate::models::{books_model::Book, user_model::User};
 use mongodb::{
-    bson::{doc, extjson::de::Error},
+    bson::{doc, extjson::de::Error, oid::ObjectId, Bson},
     results::{DeleteResult, InsertOneResult, UpdateResult},
     Client, Collection,
 };
@@ -34,17 +34,49 @@ impl MongoRepo {
     pub async fn create_user(&self, new_user: User) -> Result<InsertOneResult, Error> {
         let new_doc = User {
             id: None,
-            name: new_user.name,
-            email: new_user.email,
-            password: new_user.password,
-            location: new_user.location,
-            title: new_user.title,
+            name: new_user.name.clone(),
+            email: new_user.email.clone(),
+            password: new_user.password.clone(),
+            location: new_user.location.clone(),
+            title: new_user.title.clone(),
+            user_id: None,
         };
-        let user = self
+        let user: InsertOneResult = self
             .col
             .insert_one(new_doc, None)
             .await
             .expect("Error creating user");
+
+        let id = if let Bson::ObjectId(oid) = &user.inserted_id {
+            oid.to_string()
+        } else {
+            return Err(Error::DeserializationError {
+                message: "Unable to Deserialize".to_string(),
+            });
+        };
+
+        println!("{}", id);
+
+        let obj_id = mongodb::bson::oid::ObjectId::from_str(id.as_str()).unwrap();
+        let filter = doc! {"_id": obj_id };
+
+        let new_doc = doc! {
+            "$set":
+             {
+            "id": id.clone(),
+            "name": new_user.name,
+            "email": new_user.email,
+            "password": new_user.password,
+            "location": new_user.location,
+            "title": new_user.title,
+            "user_id": id.clone(),
+        }};
+
+        self.col
+            .update_one(filter, new_doc, None)
+            .await
+            .ok()
+            .expect("Unable to update user id");
         Ok(user)
     }
 
@@ -74,7 +106,8 @@ impl MongoRepo {
                     "id": new_user.id,
                     "name": new_user.name,
                     "location": new_user.location,
-                    "title": new_user.title
+                    "title": new_user.title,
+                    "owner_id": new_user.id
                 },
         };
 
@@ -132,15 +165,38 @@ impl MongoRepo {
             .insert_one(doc, None)
             .await
             .expect("Unable to create book");
+
+        let id_str = if let Bson::ObjectId(inserted_id) = book_data.inserted_id {
+            inserted_id.to_string()
+        } else {
+            return Err(Error::DeserializationError {
+                message: "Unable to deserialize".to_string(),
+            });
+        };
+
+        let id = ObjectId::from_str(id_str.as_str()).unwrap();
+
+        let query = doc! {"_id": id};
+        let update = doc! {
+            "$set":
+             {
+            "id": id.clone(),
+        }};
+
+        self.book_col
+            .update_one(query, update, None)
+            .await
+            .ok()
+            .expect("Unable to updated");
         Ok(book_data)
     }
 
-    pub async fn get_books(&self, names: String) -> Result<Vec<Book>, Error> {
+    pub async fn get_book(&self, names: String) -> Result<Vec<Book>, Error> {
         let name_arr: Vec<&str> = names.split(",").collect();
-
+        println!("{:?}", name_arr);
         let filter = doc! {
             "title": {
-                "$in": ["rich", "winners"]
+                "$in": name_arr
             }
         };
 
@@ -156,6 +212,31 @@ impl MongoRepo {
         while let Some(data) = data.try_next().await.expect("Unable to retrive data") {
             arr.push(data)
         }
+        Ok(arr)
+    }
+
+    pub async fn get_books(&self) -> Result<Vec<Book>, Error> {
+        let filter = doc! {"
+        $lookup": {
+        "From": "User",
+        "LocalField": "id",
+        "foreignField": "user_id",
+        "as": "book_owner"
+        }};
+
+        let mut data = self
+            .book_col
+            .find(filter, None)
+            .await
+            .ok()
+            .expect("Unable to get all boks");
+
+        let mut arr = Vec::new();
+
+        while let Some(data) = data.try_next().await.expect("unable to retrieve books") {
+            arr.push(data)
+        }
+
         Ok(arr)
     }
 }

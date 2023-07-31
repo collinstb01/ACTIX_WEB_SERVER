@@ -63,6 +63,7 @@ pub async fn create_user(db: Data<MongoRepo>, new_user: Json<User>) -> HttpRespo
         password: new_user.password.to_owned(),
         location: new_user.location.to_owned(),
         title: new_user.title.to_owned(),
+        user_id: new_user.user_id.to_owned(),
     };
 
     let user_detail = db.create_user(data).await;
@@ -106,6 +107,7 @@ pub async fn update_user(
         password: user_data.password.to_owned(),
         location: user_data.location.to_owned(),
         title: user_data.title.to_owned(),
+        user_id: user_data.user_id.to_owned(),
     };
 
     let update_result = db.update_user(id.clone(), new_user).await;
