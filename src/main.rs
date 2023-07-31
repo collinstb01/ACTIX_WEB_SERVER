@@ -5,7 +5,10 @@ mod repository;
 
 //modify imports below
 use actix_web::{web::Data, App, HttpServer};
-use api::user_api::{create_user, delete_user, get_user, get_users, update_user};
+use api::{
+    book_api::{create_book, get_books},
+    user_api::{create_user, delete_user, get_user, get_users, update_user},
+};
 // use middleware::user_middleware::middleware_handler;
 use repository::mongodb_repo::MongoRepo;
 
@@ -25,6 +28,8 @@ async fn main() -> std::io::Result<()> {
             .service(update_user)
             .service(delete_user)
             .service(get_users)
+            .service(create_book)
+            .service(get_books)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

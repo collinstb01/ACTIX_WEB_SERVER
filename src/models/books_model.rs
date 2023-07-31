@@ -7,5 +7,5 @@ pub struct Book {
     pub id: Option<ObjectId>,
     pub title: String,
     pub message: String,
-    pub ownerId: ObjectId,
+    pub owner_id: ObjectId,
 }

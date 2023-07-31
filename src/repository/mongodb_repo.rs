@@ -1,7 +1,7 @@
 use std::{env, str::FromStr};
 extern crate dotenv;
 use dotenv::dotenv;
-use futures::TryStreamExt;
+use futures::{io::Cursor, TryStreamExt};
 
 use crate::models::{books_model::Book, user_model::User};
 use mongodb::{
@@ -12,7 +12,7 @@ use mongodb::{
 
 pub struct MongoRepo {
     col: Collection<User>,
-    bookCol: Collection<Book>,
+    book_col: Collection<Book>,
 }
 
 impl MongoRepo {
@@ -25,9 +25,9 @@ impl MongoRepo {
         let client = Client::with_uri_str(uri).await.unwrap();
         let db = client.database("rustDB");
         let col: Collection<User> = db.collection("User");
-        let bookCol: Collection<Book> = db.collection("Book");
+        let book_col: Collection<Book> = db.collection("Book");
 
-        MongoRepo { col, bookCol }
+        MongoRepo { col, book_col }
     }
 
     // working
@@ -118,5 +118,44 @@ impl MongoRepo {
             users.push(user)
         }
         Ok(users)
+    }
+
+    pub async fn create_book(&self, data: Book) -> Result<InsertOneResult, Error> {
+        let doc = Book {
+            id: None,
+            title: data.title,
+            message: data.message,
+            owner_id: data.owner_id,
+        };
+        let book_data = self
+            .book_col
+            .insert_one(doc, None)
+            .await
+            .expect("Unable to create book");
+        Ok(book_data)
+    }
+
+    pub async fn get_books(&self, names: String) -> Result<Vec<Book>, Error> {
+        let name_arr: Vec<&str> = names.split(",").collect();
+
+        let filter = doc! {
+            "title": {
+                "$in": ["rich", "winners"]
+            }
+        };
+
+        let mut data = self
+            .book_col
+            .find(filter, None)
+            .await
+            .ok()
+            .expect("Unable to get book");
+
+        let mut arr = Vec::new();
+
+        while let Some(data) = data.try_next().await.expect("Unable to retrive data") {
+            arr.push(data)
+        }
+        Ok(arr)
     }
 }
