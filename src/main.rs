@@ -29,6 +29,7 @@ async fn main() -> std::io::Result<()> {
             .service(delete_user)
             .service(get_users)
             .service(get_books)
+            .service(create_book)
             .service(get_book)
     })
     .bind(("127.0.0.1", 8080))?

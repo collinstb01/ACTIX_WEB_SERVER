@@ -215,18 +215,18 @@ impl MongoRepo {
         Ok(arr)
     }
 
-    pub async fn get_books(&self) -> Result<Vec<Book>, Error> {
-        let filter = doc! {"
-        $lookup": {
-        "From": "User",
-        "LocalField": "id",
-        "foreignField": "user_id",
-        "as": "book_owner"
-        }};
+    pub async fn get_books(&self) -> Result<Vec<mongodb::bson::Document>, Error> {
+        let filter = vec![doc! {
+        "$lookup": {
+            "from": "User",
+            "localField": "owner_id",
+            "foreignField": "user_id",
+            "as": "book_owner"
+        }}];
 
         let mut data = self
             .book_col
-            .find(filter, None)
+            .aggregate(filter, None)
             .await
             .ok()
             .expect("Unable to get all boks");
